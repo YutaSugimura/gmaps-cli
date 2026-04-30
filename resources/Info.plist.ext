@@ -1,0 +1,6 @@
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>gmaps uses your location for nearby searches and directions.</string>
+<key>NSLocationUsageDescription</key>
+<string>gmaps uses your location for nearby searches and directions.</string>
+<key>LSUIElement</key>
+<true/>

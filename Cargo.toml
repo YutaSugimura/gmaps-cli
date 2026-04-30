@@ -1,0 +1,100 @@
+[package]
+name = "gmaps-cli"
+version = "0.1.0"
+edition = "2024"
+description = "Google Maps Platform CLI tool (macOS only)"
+authors = ["YutaSugimura"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/YutaSugimura/gmaps-cli"
+homepage = "https://github.com/YutaSugimura/gmaps-cli"
+keywords = ["cli", "google-maps", "geocoding", "places", "routes"]
+categories = ["command-line-utilities"]
+# Not published to crates.io: this binary depends on a macOS .app bundle
+# for CoreLocation authorization, so cargo install would not give you a
+# fully working tool. Distribute via the build script in scripts/build.sh.
+publish = false
+rust-version = "1.95"
+
+[[bin]]
+name = "gmaps"
+path = "src/main.rs"
+
+[dependencies]
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Async runtime
+tokio = { version = "1", features = [
+    "macros",
+    "rt-multi-thread",
+    "process",
+    "time",
+] }
+
+# HTTP client (rustls to avoid OpenSSL dependency)
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# serde_yaml is unmaintained (the upstream crate even publishes its version
+# string as "0.9.34+deprecated"); serde_yaml_ng is the minimal-changes fork.
+serde_yaml_ng = "0.10"
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+
+# XDG-style config paths
+directories = "6"
+
+# Interactive prompts (password masking)
+inquire = "0.7"
+
+# Tables
+comfy-table = "7"
+
+# Colored output
+owo-colors = "4"
+
+# Date / time (used for Routes API departureTime)
+chrono = { version = "0.4", default-features = false, features = [
+    "clock",
+    "serde",
+] }
+
+# CoreLocation (macOS only)
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSArray",
+    "NSDate",
+    "NSError",
+    "NSObject",
+    "NSRunLoop",
+    "NSString",
+] }
+objc2-core-location = { version = "0.3", features = [
+    "CLLocation",
+    "CLLocationManager",
+    "CLLocationManagerDelegate",
+    "CLError",
+] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# cargo-bundle metadata (used to wrap into a .app)
+[package.metadata.bundle]
+name = "gmaps"
+identifier = "com.gmaps.app"
+short_description = "Google Maps Platform CLI"
+long_description = "Nearby search, directions, and geocoding from the command line."
+osx_minimum_system_version = "12.0"
+osx_info_plist_exts = ["resources/Info.plist.ext"]

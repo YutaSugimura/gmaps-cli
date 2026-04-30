@@ -1,0 +1,36 @@
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock.bak
+
+# .app バンドル成果物
+/dist
+/bin
+
+# nix
+result
+result-*
+.direnv
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# macOS
+.DS_Store
+
+# 旧 Bun 環境（移行中の残骸）
+node_modules
+bun.lock
+*.tsbuildinfo
+.eslintcache
+
+# 一時/ログ
+*.log
+*.tgz
+coverage
+*.lcov
+
+# legacy git history backup (created during the fresh-init for OSS release)
+/.git.bak
