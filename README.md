@@ -47,20 +47,41 @@ and the macOS frameworks needed by CoreLocation are all wired up for you.
 
 - macOS (Apple Silicon / Intel)
 - [Nix](https://nixos.org/download.html) (≥ 2.18, with flakes enabled)
-- [direnv](https://direnv.net/) (optional but strongly recommended)
+- [direnv](https://direnv.net/) + [nix-direnv](https://github.com/nix-community/nix-direnv) (optional but strongly recommended)
 
 #### If you don't have Nix
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install)
 ```
 
-#### If you don't have direnv
+#### If you don't have direnv / nix-direnv
+
+`.envrc` uses `use flake`, which is provided by `nix-direnv`, so you need
+both `direnv` and `nix-direnv`. Install via Nix or Homebrew:
 
 ```bash
-brew install direnv
-eval "$(direnv hook zsh)"   # add to ~/.zshrc
+# via Nix
+nix profile install nixpkgs#direnv nixpkgs#nix-direnv
+
+# or via Homebrew
+brew install direnv nix-direnv
 ```
+
+Then hook direnv into your shell and enable nix-direnv globally:
+
+```bash
+eval "$(direnv hook zsh)"   # add to ~/.zshrc
+
+mkdir -p ~/.config/direnv
+# Nix install:
+echo "source $HOME/.nix-profile/share/nix-direnv/direnvrc" >> ~/.config/direnv/direnvrc
+# or Homebrew install:
+echo "source $(brew --prefix)/share/nix-direnv/direnvrc" >> ~/.config/direnv/direnvrc
+```
+
+> Skipping direnv is fine — just run `nix develop` manually in the project
+> root each time you start a shell to enter the dev environment.
 
 ### Setup
 
@@ -69,7 +90,7 @@ git clone https://github.com/YutaSugimura/gmaps-cli.git
 cd gmaps-cli
 
 direnv allow            # auto-load the flake
-# or, every shell:
+# or, if you skipped direnv, run this in every new shell:
 nix develop
 ```
 
