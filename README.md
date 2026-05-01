@@ -21,6 +21,15 @@ CoreLocation through `objc2-core-location`, and the API surface
 relies on macOS TCC (per-`.app`-bundle Location Services
 authorization). Porting would require a separate location backend.
 
+## Install
+
+- **Prebuilt `.app` release (recommended)** — see [INSTALL.md](INSTALL.md)
+  for the full flow (download, unzip, Gatekeeper bypass, PATH symlink,
+  SHA256 verification).
+- **From source** — Nix-based dev shell, required for Intel Macs and
+  for unreleased changes. See [Development setup](#development-setup)
+  below.
+
 ## Features
 
 ```bash
@@ -346,13 +355,14 @@ gmaps-cli/
 
 ## Troubleshooting
 
-| Symptom                              | Fix                                                                           |
-| ------------------------------------ | ----------------------------------------------------------------------------- |
-| `PERMISSION_DENIED`                  | The API isn't enabled. Open the URL in the error and click "Enable".          |
-| `REQUEST_DENIED` (API key not valid) | The API key is restricted in a way that excludes the API.                     |
-| `OVER_QUERY_LIMIT`                   | Quota exceeded. Check Cloud Console.                                          |
-| GPS times out                        | Bare binary outside an .app. Run `./scripts/build.sh` and use the `.app`.     |
-| GPS dialog never appears             | Allow `gmaps` under System Settings → Privacy & Security → Location Services. |
+| Symptom                              | Fix                                                                                                            |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `gmaps: command not found`           | `.app` is on disk but not on PATH. Symlink it: `ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps` (and ensure `~/.local/bin` is on PATH). |
+| `PERMISSION_DENIED`                  | The API isn't enabled. Open the URL in the error and click "Enable".                                           |
+| `REQUEST_DENIED` (API key not valid) | The API key is restricted in a way that excludes the API.                                                      |
+| `OVER_QUERY_LIMIT`                   | Quota exceeded. Check Cloud Console.                                                                           |
+| GPS times out                        | Bare binary outside an .app. Run `./scripts/build.sh` and use the `.app`.                                      |
+| GPS dialog never appears             | Allow `gmaps` under System Settings → Privacy & Security → Location Services.                                  |
 
 ## Debugging
 
