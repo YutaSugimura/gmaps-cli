@@ -94,11 +94,24 @@ jobs:
             ## Installation
 
             1. Download `${{ steps.package.outputs.zip_name }}` below.
-            2. Unzip and move `gmaps.app` to `/Applications`.
+            2. Unzip and move `gmaps.app` to `/Applications/`.
             3. First launch: right-click `gmaps.app` → **Open**
-               (ad-hoc signing requires a one-time Gatekeeper bypass).
-            4. The first `gmaps -H` invocation will trigger the
+               (ad-hoc signed; one-time Gatekeeper bypass).
+               The bundle is a CLI helper, so no window will appear.
+            4. Symlink the binary onto your PATH:
+               ```
+               mkdir -p ~/.local/bin
+               ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps
+               # Ensure ~/.local/bin is on PATH (e.g., add to ~/.zshrc):
+               # export PATH="$HOME/.local/bin:$PATH"
+               ```
+            5. Verify with `gmaps --version`.
+            6. The first `gmaps -H` invocation will trigger the
                Location Services authorization dialog.
+
+            See [INSTALL.md](https://github.com/YutaSugimura/gmaps-cli/blob/main/INSTALL.md)
+            for full instructions, SHA256 verification, and Intel Mac
+            (source build) notes.
 
             ### SHA256
 
