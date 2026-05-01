@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      dry_run_tag:
+        description: 'Tag name to use for a dry-run build (no Release will be created)'
+        required: false
+        default: 'v0.0.0-dev'
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
+jobs:
+  build:
+    name: Build .app bundle
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry and target
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-bundle
+        run: cargo install cargo-bundle --locked
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="${{ inputs.dry_run_tag }}"
+            VERSION="${VERSION#v}"
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${VERSION}"
+
+      - name: Verify Cargo.toml version matches tag
+        if: github.event_name == 'push'
+        run: |
+          CARGO_VERSION="$(grep -m1 '^version' Cargo.toml | awk -F'"' '{print $2}')"
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          if [[ "$CARGO_VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::Cargo.toml version ($CARGO_VERSION) does not match tag (v$TAG_VERSION)"
+            exit 1
+          fi
+          echo "Versions match: $CARGO_VERSION"
+
+      - name: Build .app bundle (cargo bundle + ad-hoc signing)
+        run: ./scripts/build.sh
+
+      - name: Package .app into zip
+        id: package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCH="$(uname -m)"
+          ZIP_NAME="gmaps-${VERSION}-macos-${ARCH}.app.zip"
+          # ditto preserves extended attributes (and the ad-hoc signature)
+          # better than `zip -r`.
+          ditto -c -k --keepParent \
+            target/release/bundle/osx/gmaps.app \
+            "${ZIP_NAME}"
+          SHA256="$(shasum -a 256 "${ZIP_NAME}" | awk '{print $1}')"
+          {
+            echo "zip_name=${ZIP_NAME}"
+            echo "sha256=${SHA256}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Built: ${ZIP_NAME}"
+          echo "SHA256: ${SHA256}"
+
+      - name: Verify zip integrity and signature
+        run: |
+          unzip -t "${{ steps.package.outputs.zip_name }}" > /dev/null
+          codesign --verify --verbose target/release/bundle/osx/gmaps.app
+
+      - name: Create GitHub Release (tag push only)
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package.outputs.zip_name }}
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            1. Download `${{ steps.package.outputs.zip_name }}` below.
+            2. Unzip and move `gmaps.app` to `/Applications`.
+            3. First launch: right-click `gmaps.app` → **Open**
+               (ad-hoc signing requires a one-time Gatekeeper bypass).
+            4. The first `gmaps -H` invocation will trigger the
+               Location Services authorization dialog.
+
+            ### SHA256
+
+            ```
+            ${{ steps.package.outputs.sha256 }}  ${{ steps.package.outputs.zip_name }}
+            ```
+
+      - name: Upload artifact (workflow_dispatch dry-run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.zip_name }}
+          path: ${{ steps.package.outputs.zip_name }}
+          retention-days: 7
