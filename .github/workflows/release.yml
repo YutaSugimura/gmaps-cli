@@ -140,6 +140,20 @@ jobs:
           body: |
             ## Installation
 
+            ### With Homebrew (recommended)
+
+            ```
+            brew tap YutaSugimura/tap
+            brew trust YutaSugimura/tap        # Homebrew 5.x: trust third-party taps once
+            brew install --cask gmaps
+            gmaps --version
+            ```
+
+            Homebrew installs `gmaps.app` and symlinks the `gmaps` command onto
+            your PATH automatically — no manual symlink or PATH editing needed.
+
+            ### Manual download
+
             1. Download `${{ steps.package.outputs.zip_name }}` below.
             2. Unzip and move `gmaps.app` to `/Applications/`.
                (Signed with a Developer ID and notarized by Apple, so it
@@ -153,8 +167,9 @@ jobs:
                # export PATH="$HOME/.local/bin:$PATH"
                ```
             4. Verify with `gmaps --version`.
-            5. The first `gmaps -H` invocation will trigger the
-               Location Services authorization dialog.
+
+            The first `gmaps -H` invocation will trigger the Location Services
+            authorization dialog.
 
             See [INSTALL.md](https://github.com/YutaSugimura/gmaps-cli/blob/main/INSTALL.md)
             for full instructions, SHA256 verification, and Intel Mac
