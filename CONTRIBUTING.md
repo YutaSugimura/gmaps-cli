@@ -3,8 +3,7 @@
 Thanks for your interest! Bug reports, fixes, and small enhancements are
 all welcome. This document covers the day-to-day workflow.
 
-By participating in this project you agree to abide by our
-[Code of Conduct](CODE_OF_CONDUCT.md).
+Please be respectful and constructive in all project interactions.
 
 ## Before you start
 
@@ -40,7 +39,7 @@ These are the same checks CI runs:
 cargo fmt --all -- --check        # formatting
 cargo clippy --all-targets -- -D warnings   # lint, warnings as errors
 cargo test                        # unit tests
-cargo audit                       # advisory database (security)
+cargo audit                       # advisory DB (install: cargo install cargo-audit)
 ```
 
 If you're touching anything in `src/api/` or `src/commands/`, also try a
@@ -94,7 +93,9 @@ pass `cargo test` on its own — bisect-friendly history matters.
 ## Reporting security issues
 
 Please do **not** open a public issue for security vulnerabilities.
-Instead, see [SECURITY.md](SECURITY.md) for the disclosure process.
+Instead, use GitHub's private vulnerability reporting on this repository
+(**Security** tab → **Report a vulnerability**), or contact the maintainer
+privately.
 
 ## License
 

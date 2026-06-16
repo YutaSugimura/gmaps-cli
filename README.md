@@ -23,12 +23,20 @@ authorization). Porting would require a separate location backend.
 
 ## Install
 
-- **Prebuilt `.app` release (recommended)** — see [INSTALL.md](INSTALL.md)
-  for the full flow (download, unzip, Gatekeeper bypass, PATH symlink,
-  SHA256 verification).
-- **From source** — Nix-based dev shell, required for Intel Macs and
-  for unreleased changes. See [Development setup](#development-setup)
-  below.
+```bash
+brew tap YutaSugimura/tap
+brew trust YutaSugimura/tap        # Homebrew 5.x requires trusting third-party taps once
+brew install --cask gmaps
+gmaps --version
+```
+
+The bundle is Developer ID signed and notarized, so it launches without any
+Gatekeeper bypass, and Homebrew symlinks the `gmaps` command onto your
+`PATH` automatically. Apple Silicon only.
+
+See **[INSTALL.md](INSTALL.md)** for the full guide — Homebrew, the prebuilt
+`.app` release, building from source (Intel Macs), first-time setup, and a
+clean reinstall.
 
 ## Features
 
@@ -139,6 +147,12 @@ The script:
 2. Applies an **ad-hoc code signature** with `codesign --force --deep --sign -`
 3. Validates `Info.plist` via `plutil -lint`
 4. Prints follow-up install instructions
+
+> For **distributable** builds, `./scripts/build-signed.sh` instead signs
+> with a Developer ID (hardened runtime), notarizes via the Apple notary
+> service, and staples the ticket — the same flow the release CI runs. It
+> needs a Developer ID certificate plus `APPLE_ID`, `APPLE_TEAM_ID`, and
+> `APPLE_APP_SPECIFIC_PASSWORD` in the environment.
 
 ### Install as a global `gmaps` command
 
@@ -326,10 +340,14 @@ gmaps-cli/
 ├── flake.nix / flake.lock          # Nix dev shell
 ├── .envrc                          # direnv (use flake)
 ├── Cargo.toml                      # cargo-bundle metadata included
+├── README.md / INSTALL.md          # overview / install + setup guide
+├── CONTRIBUTING.md / CHANGELOG.md  # contribution workflow / release history
+├── .github/workflows/              # ci.yml, release.yml (sign + notarize)
 ├── resources/
 │   └── Info.plist.ext              # NSLocationWhenInUseUsageDescription
 ├── scripts/
-│   └── build.sh                    # cargo bundle + ad-hoc signing
+│   ├── build.sh                    # cargo bundle + ad-hoc signing (local)
+│   └── build-signed.sh             # Developer ID sign + notarize + staple
 ├── src/
 │   ├── main.rs                     # clap entrypoint
 │   ├── config.rs                   # YAML I/O
@@ -350,14 +368,14 @@ gmaps-cli/
 │   └── location/
 │       ├── mod.rs                  # LatLng / resolve_center
 │       └── gps.rs                  # CoreLocation via objc2
-└── README.md
+└── Cargo.toml
 ```
 
 ## Troubleshooting
 
 | Symptom                              | Fix                                                                                                            |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `gmaps: command not found`           | `.app` is on disk but not on PATH. Symlink it: `ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps` (and ensure `~/.local/bin` is on PATH). |
+| `gmaps: command not found`           | Homebrew installs handle PATH automatically. For a manual `.app` install, symlink it: `ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps` (and ensure `~/.local/bin` is on PATH). |
 | `PERMISSION_DENIED`                  | The API isn't enabled. Open the URL in the error and click "Enable".                                           |
 | `REQUEST_DENIED` (API key not valid) | The API key is restricted in a way that excludes the API.                                                      |
 | `OVER_QUERY_LIMIT`                   | Quota exceeded. Check Cloud Console.                                                                           |
