@@ -66,7 +66,8 @@ Inside the dev shell you have `cargo`, `clippy`, `rustfmt`, `cargo-bundle`,
 ## Patterns to avoid
 
 - `serde_yaml` (deprecated upstream) — use `serde_yaml_ng`.
-- `OpenSSL` features in `reqwest` — we use `rustls-tls`.
+- `OpenSSL` features in `reqwest` — we use `rustls` (the `rustls-tls`
+  feature was renamed to `rustls` in reqwest 0.13).
 - `eprintln!` + `std::process::exit(1)` from command code (see "Errors
   propagate via `?`" above).
 - New `#[allow(dead_code)]` markers without a TODO + a near-term plan.
