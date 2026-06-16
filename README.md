@@ -379,8 +379,8 @@ gmaps-cli/
 | `PERMISSION_DENIED`                  | The API isn't enabled. Open the URL in the error and click "Enable".                                           |
 | `REQUEST_DENIED` (API key not valid) | The API key is restricted in a way that excludes the API.                                                      |
 | `OVER_QUERY_LIMIT`                   | Quota exceeded. Check Cloud Console.                                                                           |
-| GPS times out                        | Bare binary outside an .app. Run `./scripts/build.sh` and use the `.app`.                                      |
-| GPS dialog never appears             | Allow `gmaps` under System Settings → Privacy & Security → Location Services.                                  |
+| GPS times out                        | Enable `gmaps` under System Settings → Privacy & Security → Location Services (toggle it on if listed; run once more to register it if missing). The first request often shows no prompt. From source, the binary must be the `.app` (run `./scripts/build.sh`). |
+| GPS dialog never appears             | Expected — directly-launched CLIs frequently get no prompt. Enable `gmaps` manually under System Settings → Privacy & Security → Location Services. `tccutil` cannot reset Location; toggle it there instead. |
 
 ## Debugging
 

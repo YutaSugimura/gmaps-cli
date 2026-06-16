@@ -114,12 +114,15 @@ brew uninstall --cask gmaps
 # 2. Remove your config and saved places
 rm -rf ~/.config/gmaps
 
-# 3. Reset the Location Services authorization (next run prompts fresh)
-tccutil reset Location com.gmaps.app
-
-# 4. (optional) Remove the tap
+# 3. (optional) Remove the tap
 brew untap YutaSugimura/tap
 ```
+
+To revoke the Location Services permission, toggle `gmaps` **off** under
+**System Settings › Privacy & Security › Location Services**. macOS keeps
+location authorization in a SIP-protected store that `tccutil` cannot reset
+(`tccutil reset Location` fails for both a single app and globally), and the
+permission survives an uninstall/reinstall since the bundle id is unchanged.
 
 For a clean reinstall, run the steps above, then install again and
 re-run setup:
