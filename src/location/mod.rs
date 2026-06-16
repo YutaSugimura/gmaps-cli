@@ -164,15 +164,26 @@ pub fn get_current_location_via_gps() -> Result<LatLng> {
 }
 
 /// Detect whether the running binary is inside an .app bundle.
+///
+/// The executable is almost always invoked through a symlink: Homebrew links
+/// it into `$(brew --prefix)/bin`, and the manual install symlinks it into
+/// `~/.local/bin`. `current_exe()` returns that symlink path verbatim (it does
+/// not resolve symlinks), so we canonicalize first — otherwise a correctly
+/// bundled install looks like a bare binary and GPS gets disabled. CoreLocation
+/// itself resolves the real path via CFBundle, so GPS works once we agree the
+/// process is bundled.
 pub fn is_app_bundle() -> bool {
     match std::env::current_exe() {
-        Ok(path) => {
-            // Check for the ".app/Contents/MacOS/<bin>" path layout.
-            let path_str = path.to_string_lossy();
-            path_str.contains(".app/Contents/MacOS/")
-        }
+        Ok(path) => exe_is_in_app_bundle(&path),
         Err(_) => false,
     }
+}
+
+fn exe_is_in_app_bundle(exe: &std::path::Path) -> bool {
+    // Resolve symlinks so the real `.app/Contents/MacOS/<bin>` layout shows
+    // through; fall back to the raw path if canonicalization fails.
+    let resolved = std::fs::canonicalize(exe).unwrap_or_else(|_| exe.to_path_buf());
+    resolved.to_string_lossy().contains(".app/Contents/MacOS/")
 }
 
 #[cfg(test)]
@@ -196,5 +207,43 @@ mod tests {
         assert!(parse_latlng("40.7580").is_none());
         assert!(parse_latlng("91,0").is_none());
         assert!(parse_latlng("0,181").is_none());
+    }
+
+    // Regression: a bundled binary invoked through a symlink (Homebrew's
+    // bin shim, or a manual ~/.local/bin link) must still be recognized as
+    // running inside the .app. Before canonicalization the symlink path
+    // ("…/bin/gmaps") did not contain ".app/Contents/MacOS/", so GPS was
+    // wrongly skipped.
+    #[test]
+    fn app_bundle_detected_through_symlink() {
+        use std::fs;
+        let base = std::env::temp_dir().join(format!(
+            "gmaps-cli-bundle-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let macos_dir = base.join("gmaps.app/Contents/MacOS");
+        fs::create_dir_all(&macos_dir).unwrap();
+        let real_bin = macos_dir.join("gmaps");
+        fs::write(&real_bin, b"#!/bin/sh\n").unwrap();
+
+        let bin_dir = base.join("bin");
+        fs::create_dir_all(&bin_dir).unwrap();
+        let link = bin_dir.join("gmaps");
+        std::os::unix::fs::symlink(&real_bin, &link).unwrap();
+
+        // The raw symlink path does not look bundled, but the resolved one does.
+        assert!(!link.to_string_lossy().contains(".app/Contents/MacOS/"));
+        assert!(exe_is_in_app_bundle(&link));
+
+        // A plain binary outside any bundle is still reported as bare.
+        let bare = bin_dir.join("not-bundled");
+        fs::write(&bare, b"x").unwrap();
+        assert!(!exe_is_in_app_bundle(&bare));
+
+        fs::remove_dir_all(&base).ok();
     }
 }

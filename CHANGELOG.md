@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`brew install --cask gmaps`).
 - This changelog.
 
+### Fixed
+
+- GPS was wrongly disabled ("Not running inside an .app bundle") when `gmaps`
+  was launched through a symlink, as Homebrew and the manual `~/.local/bin`
+  install both do. `is_app_bundle()` now canonicalizes the executable path
+  before checking for the `.app/Contents/MacOS/` layout.
+
 ### Changed
 
 - Documentation reorganization: README and INSTALL.md updated for the
