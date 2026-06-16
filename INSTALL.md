@@ -68,3 +68,66 @@ shasum -a 256 gmaps-0.1.1-macos-arm64.app.zip
 See [Development setup](README.md#development-setup) in the README
 for the Nix-based dev shell. Source builds are required for Intel
 Macs and for the latest unreleased changes.
+
+## First-time setup
+
+After installing, run the interactive setup wizard:
+
+```bash
+gmaps init
+```
+
+It walks you through:
+
+- **API key** — your Google Maps Platform key (masked input). Get one at the
+  [Cloud Console](https://console.cloud.google.com/google/maps-apis/credentials)
+  and enable **Geocoding API**, **Places API (New)**, and **Routes API**. The
+  wizard verifies the key with a live request before saving.
+- **Default location source** — one of:
+  - **Fixed place** — a saved coordinate (e.g. `home`) used when you don't
+    pass `--location`.
+  - **GPS (CoreLocation)** — uses your Mac's location with `gmaps -H` /
+    `--here`.
+  - **Manual** — always require an explicit `--location`.
+- **Language / region** — e.g. `ja` / `JP`.
+
+Re-run `gmaps init` anytime to change settings (press Enter to keep an
+existing value). Manage saved places later with `gmaps places ...`.
+
+Settings live under `~/.config/gmaps/` (created with mode `0600`):
+
+| File | Contents |
+| --- | --- |
+| `config.yaml` | API key, default location source, language/region |
+| `places.yaml` | saved places |
+
+The first `gmaps -H` invocation triggers the macOS Location Services
+prompt; approve `gmaps` under **System Settings › Privacy & Security ›
+Location Services**.
+
+## Clean reinstall / uninstall
+
+```bash
+# 1. Remove the app and the `gmaps` command
+brew uninstall --cask gmaps
+
+# 2. Remove your config and saved places
+rm -rf ~/.config/gmaps
+
+# 3. Reset the Location Services authorization (next run prompts fresh)
+tccutil reset Location com.gmaps.app
+
+# 4. (optional) Remove the tap
+brew untap YutaSugimura/tap
+```
+
+For a clean reinstall, run the steps above, then install again and
+re-run setup:
+
+```bash
+brew install --cask gmaps
+gmaps init
+```
+
+> Installed from a prebuilt zip instead of Homebrew? Replace step 1 with
+> `rm -rf /Applications/gmaps.app ~/.local/bin/gmaps`.
