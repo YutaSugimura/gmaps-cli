@@ -26,7 +26,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-  KEYCHAIN_PATH: "${{ runner.temp }}/app-signing.keychain-db"
 
 jobs:
   build:
@@ -77,6 +76,7 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
           echo "$MACOS_CERTIFICATE" | base64 --decode -o "$CERT_PATH"
 
           # Create an ephemeral keychain so the signing key never lands in the
@@ -176,4 +176,4 @@ jobs:
 
       - name: Clean up signing keychain
         if: always()
-        run: security delete-keychain "$KEYCHAIN_PATH" || true
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
