@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- GPS timeout error now points to enabling location under System Settings >
+  Privacy & Security > Location Services, instead of the misleading "not an
+  .app bundle / run cargo bundle" advice. Docs note that `tccutil` cannot
+  reset Location (use the System Settings toggle).
+
 ## [0.1.2] - 2026-06-16
 
 ### Added

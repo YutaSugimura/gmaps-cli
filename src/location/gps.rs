@@ -149,7 +149,7 @@ pub fn run() -> Result<LatLng> {
         if Instant::now() >= deadline {
             unsafe { manager.stopUpdatingLocation() };
             return Err(anyhow!(
-                "GPS lookup timed out.\n  → If no authorization dialog appeared, the binary may not be inside an .app bundle.\n  → Run 'cargo bundle --release' to wrap it as a .app and try again."
+                "GPS lookup timed out.\n  → Enable location for gmaps under System Settings > Privacy & Security > Location Services, then try again.\n  → The first request may not show a prompt; if gmaps is listed but off, toggle it on. If it is missing, run this once more to register it."
             ));
         }
     }
