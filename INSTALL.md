@@ -1,9 +1,29 @@
 # Installation
 
 `gmaps` is distributed as a macOS `.app` bundle (CoreLocation requires
-this for GPS authorization). Two paths are supported.
+this for GPS authorization). The bundle is Developer ID signed and
+notarized, so it launches without any Gatekeeper bypass.
 
-## From a prebuilt release (recommended)
+> Apple Silicon only. Intel Macs build from source — see
+> [From source](#from-source).
+
+## With Homebrew (recommended)
+
+```bash
+brew tap YutaSugimura/tap
+brew trust YutaSugimura/tap        # Homebrew 5.x requires trusting third-party taps once
+brew install --cask gmaps
+gmaps --version
+```
+
+Homebrew installs `gmaps.app` and symlinks the `gmaps` command onto your
+`PATH` automatically — no manual symlink or `PATH` editing needed. Upgrade
+with `brew upgrade --cask gmaps`; remove with `brew uninstall --cask gmaps`.
+
+The first `gmaps -H` invocation triggers the Location Services
+authorization dialog.
+
+## From a prebuilt release
 
 Grab the latest `.app` zip from the [Releases page](https://github.com/YutaSugimura/gmaps-cli/releases/latest).
 
