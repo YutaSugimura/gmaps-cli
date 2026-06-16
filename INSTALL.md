@@ -30,7 +30,7 @@ Grab the latest `.app` zip from the [Releases page](https://github.com/YutaSugim
 ```bash
 # Download and unzip
 curl -L -o gmaps.app.zip \
-  "https://github.com/YutaSugimura/gmaps-cli/releases/latest/download/gmaps-0.1.2-macos-arm64.app.zip"
+  "https://github.com/YutaSugimura/gmaps-cli/releases/latest/download/gmaps-0.1.3-macos-arm64.app.zip"
 unzip gmaps.app.zip
 mv gmaps.app /Applications/
 
@@ -60,7 +60,7 @@ authorization dialog.
 Each Release notes body includes a SHA256 line. Verify after download:
 
 ```bash
-shasum -a 256 gmaps-0.1.2-macos-arm64.app.zip
+shasum -a 256 gmaps-0.1.3-macos-arm64.app.zip
 ```
 
 ## From source
