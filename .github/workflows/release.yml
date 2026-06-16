@@ -11,13 +11,25 @@ on:
         required: false
         default: 'v0.0.0-dev'
 
+# ── Required repository secrets ──────────────────────────────────────────
+# Code signing (Developer ID Application):
+#   MACOS_CERTIFICATE          base64 of the exported .p12 (cert + private key)
+#   MACOS_CERTIFICATE_PWD      password protecting that .p12
+#   KEYCHAIN_PASSWORD          any random string; for the ephemeral keychain
+# Notarization (Apple notary service):
+#   APPLE_ID                   Apple ID email
+#   APPLE_TEAM_ID              10-char Developer Team ID
+#   APPLE_APP_SPECIFIC_PASSWORD  app-specific password (appleid.apple.com)
+# See scripts/build-signed.sh for the local equivalent of this flow.
+# ─────────────────────────────────────────────────────────────────────────
+
 env:
   CARGO_TERM_COLOR: always
   CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
   build:
-    name: Build .app bundle
+    name: Build signed .app bundle
     runs-on: macos-latest
     permissions:
       contents: write
@@ -57,21 +69,53 @@ jobs:
           fi
           echo "Versions match: $CARGO_VERSION"
 
-      - name: Build .app bundle (cargo bundle + ad-hoc signing)
-        run: ./scripts/build.sh
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          echo "$MACOS_CERTIFICATE" | base64 --decode -o "$CERT_PATH"
 
-      - name: Package .app into zip
+          # Create an ephemeral keychain so the signing key never lands in the
+          # runner's login keychain.
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" \
+            -P "$MACOS_CERTIFICATE_PWD" \
+            -A -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH" \
+            -T /usr/bin/codesign
+          # Let codesign use the key non-interactively.
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Prepend our keychain to the search list, keeping the existing ones
+          # (so Apple's intermediate certs in the system keychain stay visible).
+          EXISTING=$(security list-keychains -d user | sed -e 's/[\" ]//g')
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $EXISTING
+
+          rm -f "$CERT_PATH"
+          echo "Imported signing identities:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+      - name: Build, sign, notarize, and staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: ./scripts/build-signed.sh
+
+      - name: Locate artifact and compute checksum
         id: package
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          ARCH="$(uname -m)"
-          ZIP_NAME="gmaps-${VERSION}-macos-${ARCH}.app.zip"
-          # ditto preserves extended attributes (and the ad-hoc signature)
-          # better than `zip -r`.
-          ditto -c -k --keepParent \
-            target/release/bundle/osx/gmaps.app \
-            "${ZIP_NAME}"
-          SHA256="$(shasum -a 256 "${ZIP_NAME}" | awk '{print $1}')"
+          ZIP_NAME="$(ls gmaps-*-macos-*.app.zip)"
+          SHA256="$(shasum -a 256 "$ZIP_NAME" | awk '{print $1}')"
           {
             echo "zip_name=${ZIP_NAME}"
             echo "sha256=${SHA256}"
@@ -79,10 +123,13 @@ jobs:
           echo "Built: ${ZIP_NAME}"
           echo "SHA256: ${SHA256}"
 
-      - name: Verify zip integrity and signature
+      - name: Verify zip, signature, and notarization
         run: |
           unzip -t "${{ steps.package.outputs.zip_name }}" > /dev/null
-          codesign --verify --verbose target/release/bundle/osx/gmaps.app
+          APP="target/release/bundle/osx/gmaps.app"
+          codesign --verify --strict --verbose=2 "$APP"
+          xcrun stapler validate "$APP"
+          spctl --assess --type exec --verbose=4 "$APP"
 
       - name: Create GitHub Release (tag push only)
         if: github.event_name == 'push'
@@ -95,18 +142,18 @@ jobs:
 
             1. Download `${{ steps.package.outputs.zip_name }}` below.
             2. Unzip and move `gmaps.app` to `/Applications/`.
-            3. First launch: right-click `gmaps.app` → **Open**
-               (ad-hoc signed; one-time Gatekeeper bypass).
-               The bundle is a CLI helper, so no window will appear.
-            4. Symlink the binary onto your PATH:
+               (Signed with a Developer ID and notarized by Apple, so it
+               launches without any Gatekeeper bypass. The bundle is a CLI
+               helper, so no window will appear.)
+            3. Symlink the binary onto your PATH:
                ```
                mkdir -p ~/.local/bin
                ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps
                # Ensure ~/.local/bin is on PATH (e.g., add to ~/.zshrc):
                # export PATH="$HOME/.local/bin:$PATH"
                ```
-            5. Verify with `gmaps --version`.
-            6. The first `gmaps -H` invocation will trigger the
+            4. Verify with `gmaps --version`.
+            5. The first `gmaps -H` invocation will trigger the
                Location Services authorization dialog.
 
             See [INSTALL.md](https://github.com/YutaSugimura/gmaps-cli/blob/main/INSTALL.md)
@@ -126,3 +173,7 @@ jobs:
           name: ${{ steps.package.outputs.zip_name }}
           path: ${{ steps.package.outputs.zip_name }}
           retention-days: 7
+
+      - name: Clean up signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
