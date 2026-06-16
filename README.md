@@ -49,7 +49,7 @@ gmaps places list / remove                    # List or remove saved places
 gmaps whereami                                # Print GPS location + address + place name
 gmaps geocode <address>                       # Address → coordinates
 gmaps reverse <lat,lng>                       # Coordinates → address
-gmaps nearby <keyword> [-H] [--radius <m>]    # Search nearby places (-H = GPS, @name = saved place)
+gmaps nearby <keyword> [-H] [--radius <m>] [--map]  # Search nearby places (-H = GPS, @name = saved place, --map = ASCII map)
 gmaps route <origin> <destination>            # Compute a route
 ```
 
@@ -228,7 +228,14 @@ gmaps nearby pizza -H
 
 # Open now
 gmaps nearby cafe --open-now
+
+# Render an ASCII map of results around the center (in addition to the table)
+gmaps nearby cafe --radius 500 --map
 ```
+
+`--map` draws a compass-oriented grid (N/S/E/W) with each result numbered to
+match the table; the header notes the meters-per-cell scale, and any results
+beyond the grid are listed as `off-map`. It is ignored with `--json`.
 
 ### Routing
 
