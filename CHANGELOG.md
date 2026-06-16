@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-16
+
 ### Added
 
 - Homebrew install path via the `YutaSugimura/homebrew-tap` cask
   (`brew install --cask gmaps`).
 - This changelog.
+
+### Changed
+
+- Documentation reorganization: README and INSTALL.md updated for the
+  Homebrew flow, first-time setup, and clean reinstall; clarified the role
+  of each doc.
 
 ### Fixed
 
@@ -19,12 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was launched through a symlink, as Homebrew and the manual `~/.local/bin`
   install both do. `is_app_bundle()` now canonicalizes the executable path
   before checking for the `.app/Contents/MacOS/` layout.
-
-### Changed
-
-- Documentation reorganization: README and INSTALL.md updated for the
-  Homebrew flow, first-time setup, and clean reinstall; clarified the role
-  of each doc.
 
 ## [0.1.1] - 2026-06-16
 
@@ -51,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive setup wizard, saved places (`places.yaml`), `.app` bundle
   packaging, and the prebuilt-release installation flow (INSTALL.md).
 
-[Unreleased]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/YutaSugimura/gmaps-cli/releases/tag/v0.1.0
