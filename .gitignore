@@ -6,6 +6,7 @@ Cargo.lock.bak
 # .app バンドル成果物
 /dist
 /bin
+gmaps-*-macos-*.app.zip
 
 # nix
 result
