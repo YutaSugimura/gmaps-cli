@@ -108,6 +108,10 @@ enum Commands {
         #[arg(long, value_enum, default_value_t = RankPreference::Distance)]
         rank: RankPreference,
 
+        /// Render a small ASCII map of results relative to the center
+        #[arg(long)]
+        map: bool,
+
         /// Output as JSON
         #[arg(long)]
         json: bool,
@@ -246,6 +250,7 @@ async fn run() -> Result<()> {
             open_now,
             limit,
             rank,
+            map,
             json,
         } => {
             let config = require_config()?;
@@ -260,6 +265,7 @@ async fn run() -> Result<()> {
                     open_now,
                     limit,
                     rank,
+                    map,
                     json,
                 },
             )
