@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `gmaps nearby --map`: render a compass-oriented ASCII map of results around
+  the search center, numbered to match the table, with off-map results listed
+  separately. Ignored with `--json`.
+
 ### Changed
 
 - GPS timeout error now points to enabling location under System Settings >

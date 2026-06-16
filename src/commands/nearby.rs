@@ -420,4 +420,27 @@ mod tests {
         assert!(place_label(&mut grid, 2, 4, &['1']));
         assert_eq!(grid[2][4], '1');
     }
+
+    #[test]
+    fn projection_beyond_radius_lands_off_grid() {
+        let c = ll(35.0, 139.0);
+        let radius = 500u32;
+        let cos_lat = c.lat.to_radians().cos();
+        // ~2x the radius east must project past the right edge, so the
+        // caller treats it as off-map.
+        let far_east = ll(35.0, 139.0 + (2.0 * radius as f64) / (111_320.0 * cos_lat));
+        let (col, _row) = project_to_grid(c, far_east, radius, MAP_W, MAP_H);
+        assert!(
+            col >= MAP_W as i64,
+            "a point well beyond the radius should fall off the grid, got col={col}"
+        );
+    }
+
+    #[test]
+    fn place_label_fails_when_no_room() {
+        // A grid already full of digits leaves no free span, so placement
+        // fails and the caller routes the marker to the off-map list.
+        let mut grid = vec![vec!['9'; 3]; 3];
+        assert!(!place_label(&mut grid, 1, 1, &['1']));
+    }
 }
