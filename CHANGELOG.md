@@ -1,0 +1,49 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Homebrew install path via the `YutaSugimura/homebrew-tap` cask
+  (`brew install --cask gmaps`).
+- This changelog.
+
+### Changed
+
+- Documentation reorganization: README and INSTALL.md updated for the
+  Homebrew flow, first-time setup, and clean reinstall; clarified the role
+  of each doc.
+
+## [0.1.1] - 2026-06-16
+
+### Added
+
+- `scripts/build-signed.sh`: Developer ID signing + Apple notarization +
+  stapling for a distributable `.app` bundle.
+
+### Changed
+
+- Release workflow now produces a Developer ID signed and notarized bundle
+  (no Gatekeeper bypass needed) instead of ad-hoc signing.
+- Updated dependencies: clap 4.6, reqwest 0.13, inquire 0.9; nixpkgs now
+  tracks the stable `nixpkgs-26.05-darwin` channel.
+
+## [0.1.0] - 2026-05-01
+
+### Added
+
+- Initial release: a macOS CLI for the Google Maps Platform — Geocoding,
+  Places API (New), and Routes API — with CoreLocation GPS.
+- Commands: `init`, `config`, `places`, `geocode`, `reverse`, `whereami`,
+  `nearby`, `route`.
+- Interactive setup wizard, saved places (`places.yaml`), `.app` bundle
+  packaging, and the prebuilt-release installation flow (INSTALL.md).
+
+[Unreleased]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/YutaSugimura/gmaps-cli/releases/tag/v0.1.0

@@ -22,10 +22,14 @@ Inside the dev shell you have `cargo`, `clippy`, `rustfmt`, `cargo-bundle`,
 - `cargo build --release` — plain binary at `target/release/gmaps` (no GPS)
 - `./scripts/build.sh` — builds the `.app` bundle with ad-hoc code signing;
   required for any `-H` / `--here` GPS feature
+- `./scripts/build-signed.sh` — Developer ID sign + notarize + staple for a
+  distributable bundle (the flow `release.yml` runs); needs a Developer ID
+  cert and `APPLE_ID` / `APPLE_TEAM_ID` / `APPLE_APP_SPECIFIC_PASSWORD`
 - `cargo test` — unit tests (no integration tests live in `tests/` yet)
 - `cargo clippy --all-targets` — lint
 - `cargo fmt` — format
 - `cargo audit` — checks the lock file against the RustSec advisory DB
+  (not in the dev shell; install with `cargo install cargo-audit`)
 
 ## Architectural conventions
 
