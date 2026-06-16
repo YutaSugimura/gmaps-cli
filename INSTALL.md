@@ -14,9 +14,9 @@ curl -L -o gmaps.app.zip \
 unzip gmaps.app.zip
 mv gmaps.app /Applications/
 
-# First launch: right-click /Applications/gmaps.app → "Open" to bypass Gatekeeper.
-# (Ad-hoc signed; this is a one-time confirmation.)
-# gmaps.app is a CLI helper (LSUIElement), so no window will appear.
+# Signed with a Developer ID and notarized by Apple, so it launches without
+# any Gatekeeper bypass. gmaps.app is a CLI helper (LSUIElement), so no
+# window will appear.
 
 # Symlink the binary onto your PATH
 mkdir -p ~/.local/bin
