@@ -38,6 +38,39 @@ See **[INSTALL.md](INSTALL.md)** for the full guide — Homebrew, the prebuilt
 `.app` release, building from source (Intel Macs), first-time setup, and a
 clean reinstall.
 
+## Google Cloud setup
+
+Enable these three APIs in [Google Cloud Console](https://console.cloud.google.com/):
+
+| API              | Used by                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| Geocoding API    | `gmaps geocode` / `gmaps reverse` and address auto-resolution |
+| Places API (New) | `gmaps nearby`                                                |
+| Routes API       | `gmaps route`                                                 |
+
+> Cloud Console lists older variants (Places API, Directions API). This tool uses the
+> **new** ones (Places API (New), Routes API).
+
+### API key restrictions (recommended)
+
+1. **APIs & Services** → **Credentials** → **Create credentials** → **API key**
+2. Edit the new key and restrict it to the three APIs above
+
+### Budget alerts and quotas (strongly recommended)
+
+- **Billing** → **Budgets & alerts**: set a low monthly cap (e.g., $1–$5)
+- Cap each API at a sensible per-day quota (e.g., 500 requests/day)
+
+### Initial setup
+
+```bash
+gmaps init
+```
+
+The wizard collects: API key, default location source (default / gps / manual), language,
+and region; then verifies the key against the Geocoding API. Settings are written to
+`~/.config/gmaps/config.yaml` with mode 0600.
+
 ## Features
 
 ```bash
@@ -173,39 +206,6 @@ For scenarios where GPS isn't needed:
 ```bash
 cargo build --release      # produces target/release/gmaps
 ```
-
-## Google Cloud setup
-
-Enable these three APIs in [Google Cloud Console](https://console.cloud.google.com/):
-
-| API              | Used by                                                       |
-| ---------------- | ------------------------------------------------------------- |
-| Geocoding API    | `gmaps geocode` / `gmaps reverse` and address auto-resolution |
-| Places API (New) | `gmaps nearby`                                                |
-| Routes API       | `gmaps route`                                                 |
-
-> Cloud Console lists older variants (Places API, Directions API). This tool uses the
-> **new** ones (Places API (New), Routes API).
-
-### API key restrictions (recommended)
-
-1. **APIs & Services** → **Credentials** → **Create credentials** → **API key**
-2. Edit the new key and restrict it to the three APIs above
-
-### Budget alerts and quotas (strongly recommended)
-
-- **Billing** → **Budgets & alerts**: set a low monthly cap (e.g., $1–$5)
-- Cap each API at a sensible per-day quota (e.g., 500 requests/day)
-
-### Initial setup
-
-```bash
-gmaps init
-```
-
-The wizard collects: API key, default location source (default / gps / manual), language,
-and region; then verifies the key against the Geocoding API. Settings are written to
-`~/.config/gmaps/config.yaml` with mode 0600.
 
 ## Usage examples
 
