@@ -8,70 +8,56 @@
 A command-line interface for Google Maps Platform — nearby search, directions,
 geocoding, and GPS-driven location lookups, all from your terminal.
 
-> **Supported OS**: macOS only (CoreLocation via `objc2`)
-> **Language**: Rust 1.95+, distributed as a single `.app` bundle
-> **Command**: `gmaps`
+> **OS**: macOS 12+ (Apple Silicon / Intel) &nbsp;•&nbsp; **Language**: Rust 1.95+
+> &nbsp;•&nbsp; **Command**: `gmaps`
 
 ## Supported platforms
 
-macOS 12 (Monterey) and later, both Apple Silicon and Intel.
+macOS only. The GPS path links against CoreLocation through
+`objc2-core-location` and relies on macOS TCC (per-`.app`-bundle Location
+Services authorization), so `gmaps` ships as a signed `.app` bundle. Linux
+and Windows would need a separate location backend and are not supported.
 
-Linux and Windows are not supported. The GPS path links against
-CoreLocation through `objc2-core-location`, and the API surface
-relies on macOS TCC (per-`.app`-bundle Location Services
-authorization). Porting would require a separate location backend.
+Prebuilt releases are Apple Silicon only; Intel Macs build from source (see
+[CONTRIBUTING.md](CONTRIBUTING.md#development-environment)).
 
 ## Install
 
 ```bash
 brew tap YutaSugimura/tap
-brew trust YutaSugimura/tap        # Homebrew 5.x requires trusting third-party taps once
+brew trust YutaSugimura/tap        # Homebrew 5.x: trust third-party taps once
 brew install --cask gmaps
 gmaps --version
 ```
 
 The bundle is Developer ID signed and notarized, so it launches without any
-Gatekeeper bypass, and Homebrew symlinks the `gmaps` command onto your
-`PATH` automatically. Apple Silicon only.
+Gatekeeper bypass, and Homebrew puts the `gmaps` command on your `PATH`
+automatically.
 
-See **[INSTALL.md](INSTALL.md)** for the full guide — Homebrew, the prebuilt
-`.app` release, building from source (Intel Macs), first-time setup, and a
-clean reinstall.
+See **[INSTALL.md](INSTALL.md)** for the prebuilt-zip path, building from
+source, and clean reinstall / uninstall.
 
-## Google Cloud setup
+## Setup
 
-Enable these three APIs in [Google Cloud Console](https://console.cloud.google.com/):
+Enable three APIs for your key in the
+[Google Cloud Console](https://console.cloud.google.com/google/maps-apis/credentials)
+— **Geocoding API**, **Places API (New)**, and **Routes API**. Cloud Console
+also lists legacy variants (Places API, Directions API); pick the **new**
+ones. Restricting the key to just these three, and setting a low billing
+budget + per-API daily quota, is strongly recommended.
 
-| API              | Used by                                                       |
-| ---------------- | ------------------------------------------------------------- |
-| Geocoding API    | `gmaps geocode` / `gmaps reverse` and address auto-resolution |
-| Places API (New) | `gmaps nearby`                                                |
-| Routes API       | `gmaps route`                                                 |
-
-> Cloud Console lists older variants (Places API, Directions API). This tool uses the
-> **new** ones (Places API (New), Routes API).
-
-### API key restrictions (recommended)
-
-1. **APIs & Services** → **Credentials** → **Create credentials** → **API key**
-2. Edit the new key and restrict it to the three APIs above
-
-### Budget alerts and quotas (strongly recommended)
-
-- **Billing** → **Budgets & alerts**: set a low monthly cap (e.g., $1–$5)
-- Cap each API at a sensible per-day quota (e.g., 500 requests/day)
-
-### Initial setup
+Then run the interactive wizard:
 
 ```bash
 gmaps init
 ```
 
-The wizard collects: API key, default location source (default / gps / manual), language,
-and region; then verifies the key against the Geocoding API. Settings are written to
-`~/.config/gmaps/config.yaml` with mode 0600.
+It collects your API key, default location source, and language/region, then
+verifies the key with a live request before writing
+`~/.config/gmaps/config.yaml` (mode 0600). Re-run anytime to change settings.
+Full walkthrough: [INSTALL.md → First-time setup](INSTALL.md#first-time-setup).
 
-## Features
+## Commands
 
 ```bash
 gmaps init                                    # Create or update settings (interactive wizard)
@@ -86,126 +72,8 @@ gmaps nearby <keyword> [-H] [--radius <m>] [--map]  # Search nearby places (-H =
 gmaps route <origin> <destination>            # Compute a route
 ```
 
-All commands accept `--json` for piping. Set `DEBUG=1` to log requests.
-
-## Development setup
-
-This project ships a reproducible toolchain via **Nix Flakes + direnv**: Rust, `cargo-bundle`,
-and the macOS frameworks needed by CoreLocation are all wired up for you.
-
-### Prerequisites
-
-- macOS (Apple Silicon / Intel)
-- [Nix](https://nixos.org/download.html) (≥ 2.18, with flakes enabled)
-- [direnv](https://direnv.net/) + [nix-direnv](https://github.com/nix-community/nix-direnv) (optional but strongly recommended)
-
-#### If you don't have Nix
-
-```bash
-sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install)
-```
-
-#### If you don't have direnv / nix-direnv
-
-`.envrc` uses `use flake`, which is provided by `nix-direnv`, so you need
-both `direnv` and `nix-direnv`. Install via Nix or Homebrew:
-
-```bash
-# via Nix
-nix profile install nixpkgs#direnv nixpkgs#nix-direnv
-
-# or via Homebrew
-brew install direnv nix-direnv
-```
-
-Then hook direnv into your shell and enable nix-direnv globally:
-
-```bash
-eval "$(direnv hook zsh)"   # add to ~/.zshrc
-
-mkdir -p ~/.config/direnv
-# Nix install:
-echo "source $HOME/.nix-profile/share/nix-direnv/direnvrc" >> ~/.config/direnv/direnvrc
-# or Homebrew install:
-echo "source $(brew --prefix)/share/nix-direnv/direnvrc" >> ~/.config/direnv/direnvrc
-```
-
-> Skipping direnv is fine — just run `nix develop` manually in the project
-> root each time you start a shell to enter the dev environment.
-
-### Setup
-
-```bash
-git clone https://github.com/YutaSugimura/gmaps-cli.git
-cd gmaps-cli
-
-direnv allow            # auto-load the flake
-# or, if you skipped direnv, run this in every new shell:
-nix develop
-```
-
-When direnv is active, the following tools are added to `PATH`:
-
-| Tool                                           | Purpose                        |
-| ---------------------------------------------- | ------------------------------ |
-| `rustc` / `cargo` 1.95                         | Rust toolchain                 |
-| `rust-analyzer`                                | LSP server                     |
-| `clippy` / `rustfmt`                           | Linter / formatter             |
-| `cargo-bundle`                                 | `.app` bundle generation       |
-| `cargo-watch` / `cargo-edit` / `cargo-nextest` | Development helpers            |
-| `apple-sdk_15`                                 | macOS SDK (CoreLocation, etc.) |
-
-## Build & run
-
-### During development (`cargo run`)
-
-```bash
-cargo run -- init                    # wizard
-cargo run -- nearby cafe --location 40.7580,-73.9855 --radius 500
-cargo run -- route "Grand Central Terminal" "Times Square" --mode driving
-```
-
-> **Note**: `target/debug/gmaps` is a bare binary, so **GPS (`-H` / `--here`) does NOT work**.
-> See the next section for `.app` bundling.
-
-### Release build with `.app` bundle
-
-```bash
-./scripts/build.sh
-```
-
-The script:
-
-1. Runs `cargo bundle --release` to produce `target/release/bundle/osx/gmaps.app`
-2. Applies an **ad-hoc code signature** with `codesign --force --deep --sign -`
-3. Validates `Info.plist` via `plutil -lint`
-4. Prints follow-up install instructions
-
-> For **distributable** builds, `./scripts/build-signed.sh` instead signs
-> with a Developer ID (hardened runtime), notarizes via the Apple notary
-> service, and staples the ticket — the same flow the release CI runs. It
-> needs a Developer ID certificate plus `APPLE_ID`, `APPLE_TEAM_ID`, and
-> `APPLE_APP_SPECIFIC_PASSWORD` in the environment.
-
-### Install as a global `gmaps` command
-
-```bash
-mkdir -p ~/.local/bin
-ln -sf "$(pwd)/target/release/bundle/osx/gmaps.app/Contents/MacOS/gmaps" ~/.local/bin/gmaps
-
-# add to ~/.zshrc if needed:
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-This routes `gmaps` through the `.app` bundle so CoreLocation authorization works.
-
-### Plain binary (no GPS)
-
-For scenarios where GPS isn't needed:
-
-```bash
-cargo build --release      # produces target/release/gmaps
-```
+All commands accept `--json` for piping. Set `DEBUG=1` to log requests (see
+[Debugging](#debugging)).
 
 ## Usage examples
 
@@ -219,9 +87,10 @@ gmaps nearby cafe --radius 500 --limit 5
 gmaps nearby --type restaurant --radius 1000
 gmaps nearby --type convenience_store
 
-# Explicit center
+# Explicit center (lat,lng, address, or @saved-place)
 gmaps nearby pizza --location 40.7580,-73.9855
 gmaps nearby pizza --location "Times Square"
+gmaps nearby cafe --location @home --radius 500
 
 # Use GPS (.app required)
 gmaps nearby pizza -H
@@ -244,6 +113,7 @@ gmaps route "Grand Central Terminal" "Times Square"                          # d
 gmaps route "Grand Central Terminal" "Times Square" --mode walking --steps   # walking + step-by-step
 gmaps route "Grand Central Terminal" "Brooklyn Bridge" --waypoints "Penn Station"
 gmaps route "Grand Central Terminal" "Times Square" --depart 2026-04-30T18:00:00-04:00
+gmaps route @home @office --mode driving                                     # saved places
 ```
 
 > **Transit availability**: `--mode transit` is region-limited by Google.
@@ -253,14 +123,15 @@ gmaps route "Grand Central Terminal" "Times Square" --depart 2026-04-30T18:00:00
 ### Geocoding
 
 ```bash
-gmaps geocode "Statue of Liberty"
-gmaps reverse 40.7580,-73.9855
+gmaps geocode "Statue of Liberty"     # address → coordinates
+gmaps reverse 40.7580,-73.9855        # coordinates → address
 ```
 
 ### Saved places
 
-Frequently-used locations live in `places.yaml`, separately from `config.yaml`,
-and can be referenced with `@name`.
+Frequently-used locations live in `places.yaml`, separately from
+`config.yaml`, and can be referenced with `@name` anywhere a location is
+accepted.
 
 ```bash
 # Add by lat,lng or by address (auto-geocoded)
@@ -273,41 +144,32 @@ gmaps places add here -H
 # List or remove
 gmaps places list
 gmaps places remove office
-
-# Reference via @name
-gmaps nearby cafe --location @home --radius 500
-gmaps route @home @office --mode driving
-gmaps route @home "Brooklyn Bridge" --waypoints "@office|Times Square"
-```
-
-### Settings
-
-All edits go through `gmaps init`. Re-running fills each prompt with the current value
-(press Enter to keep, type to override). There's no separate `config set` command.
-
-```bash
-gmaps init                                     # initial setup or update
-gmaps config                                   # show current settings (API key masked)
 ```
 
 ### Center resolution priority
 
+When a command needs a center point, it is resolved in this order:
+
 ```
 1. --location <lat,lng | address | @name>     # explicit (highest priority)
-2. --here / -H                                  # GPS (CoreLocation, requires .app)
+2. --here / -H                                 # GPS (CoreLocation, requires .app)
 3. config.location_provider:
    - "gps":     try GPS, fall back to default_place
    - "default": use default_place
    - "manual":  --location is required (otherwise error)
 ```
 
-**GPS authorization**: Allow `gmaps` under System Settings → Privacy & Security →
-Location Services. The first run with `-H` will prompt you.
+**GPS authorization**: the first run with `-H` prompts you. Allow `gmaps`
+under System Settings → Privacy & Security → Location Services.
 
 ## Configuration files
 
+Both files live under `~/.config/gmaps/` and are created with mode 0600. All
+edits go through `gmaps init` (settings) and `gmaps places` (places) — there
+is no separate `config set` command.
+
 ```yaml
-# ~/.config/gmaps/config.yaml (mode 0600)
+# config.yaml
 api_key: "AIza..."
 default_place: "home" # references places.yaml
 language: "en"
@@ -316,7 +178,7 @@ location_provider: "default" # default | gps | manual
 ```
 
 ```yaml
-# ~/.config/gmaps/places.yaml (mode 0600)
+# places.yaml
 places:
   - name: home
     lat: 40.7484
@@ -337,46 +199,9 @@ Google Maps Platform moved to per-SKU monthly free tiers in March 2025:
 | Routes       | 10,000 / month         | $5                                |
 | Places (New) | 10,000 / month         | $32+ (depending on FieldMask)     |
 
-For personal CLI use (a few dozen requests per day) you'll typically stay within the free
-tier. Configure budget alerts and quotas anyway — accidents happen.
-
-## Project layout
-
-```
-gmaps-cli/
-├── flake.nix / flake.lock          # Nix dev shell
-├── .envrc                          # direnv (use flake)
-├── Cargo.toml                      # cargo-bundle metadata included
-├── README.md / INSTALL.md          # overview / install + setup guide
-├── CONTRIBUTING.md / CHANGELOG.md  # contribution workflow / release history
-├── .github/workflows/              # ci.yml, release.yml (sign + notarize)
-├── resources/
-│   └── Info.plist.ext              # NSLocationWhenInUseUsageDescription
-├── scripts/
-│   ├── build.sh                    # cargo bundle + ad-hoc signing (local)
-│   └── build-signed.sh             # Developer ID sign + notarize + staple
-├── src/
-│   ├── main.rs                     # clap entrypoint
-│   ├── config.rs                   # YAML I/O
-│   ├── http.rs                     # reqwest + error type
-│   ├── format.rs                   # distance / duration / haversine
-│   ├── wizard.rs                   # interactive setup
-│   ├── api/
-│   │   ├── geocoding.rs
-│   │   ├── places.rs               # Places API (New)
-│   │   └── routes.rs               # Routes API
-│   ├── commands/
-│   │   ├── config.rs
-│   │   ├── geocode.rs
-│   │   ├── nearby.rs
-│   │   ├── places.rs
-│   │   ├── route.rs
-│   │   └── whereami.rs
-│   └── location/
-│       ├── mod.rs                  # LatLng / resolve_center
-│       └── gps.rs                  # CoreLocation via objc2
-└── Cargo.toml
-```
+For personal CLI use (a few dozen requests per day) you'll typically stay
+within the free tier. Configure budget alerts and quotas anyway — accidents
+happen.
 
 ## Troubleshooting
 
@@ -386,8 +211,7 @@ gmaps-cli/
 | `PERMISSION_DENIED`                  | The API isn't enabled. Open the URL in the error and click "Enable".                                           |
 | `REQUEST_DENIED` (API key not valid) | The API key is restricted in a way that excludes the API.                                                      |
 | `OVER_QUERY_LIMIT`                   | Quota exceeded. Check Cloud Console.                                                                           |
-| GPS times out                        | Enable `gmaps` under System Settings → Privacy & Security → Location Services (toggle it on if listed; run once more to register it if missing). The first request often shows no prompt. From source, the binary must be the `.app` (run `./scripts/build.sh`). |
-| GPS dialog never appears             | Expected — directly-launched CLIs frequently get no prompt. Enable `gmaps` manually under System Settings → Privacy & Security → Location Services. `tccutil` cannot reset Location; toggle it there instead. |
+| GPS times out / no prompt            | Enable `gmaps` under System Settings → Privacy & Security → Location Services. Directly-launched CLIs often get no prompt; toggle it on manually (`tccutil` cannot reset Location). From source, the binary must be the `.app` (run `./scripts/build.sh`). |
 
 ## Debugging
 
@@ -395,14 +219,15 @@ gmaps-cli/
 DEBUG=1 gmaps nearby cafe --radius 500
 ```
 
-Outputs request URL, FieldMask, and request/response JSON to stderr (API key masked).
-
-## License
-
-[MIT](LICENSE) © 2026 YutaSugimura
+Outputs the request URL, FieldMask, and request/response JSON to stderr (API
+key masked).
 
 ## Contributing
 
 Contributions are welcome — bug reports, fixes, and small enhancements. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, coding
-conventions, and how to run the test/lint matrix locally.
+[CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, build flow,
+coding conventions, and the test/lint matrix.
+
+## License
+
+[MIT](LICENSE) © 2026 YutaSugimura

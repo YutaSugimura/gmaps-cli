@@ -4,8 +4,8 @@
 this for GPS authorization). The bundle is Developer ID signed and
 notarized, so it launches without any Gatekeeper bypass.
 
-> Apple Silicon only. Intel Macs build from source — see
-> [From source](#from-source).
+> Apple Silicon only. Intel Macs and unreleased changes build from
+> source — see [From source](#from-source).
 
 ## With Homebrew (recommended)
 
@@ -20,8 +20,7 @@ Homebrew installs `gmaps.app` and symlinks the `gmaps` command onto your
 `PATH` automatically — no manual symlink or `PATH` editing needed. Upgrade
 with `brew upgrade --cask gmaps`; remove with `brew uninstall --cask gmaps`.
 
-The first `gmaps -H` invocation triggers the Location Services
-authorization dialog.
+Then [set up your API key and settings](#first-time-setup).
 
 ## From a prebuilt release
 
@@ -34,10 +33,6 @@ curl -L -o gmaps.app.zip \
 unzip gmaps.app.zip
 mv gmaps.app /Applications/
 
-# Signed with a Developer ID and notarized by Apple, so it launches without
-# any Gatekeeper bypass. gmaps.app is a CLI helper (LSUIElement), so no
-# window will appear.
-
 # Symlink the binary onto your PATH
 mkdir -p ~/.local/bin
 ln -sf /Applications/gmaps.app/Contents/MacOS/gmaps ~/.local/bin/gmaps
@@ -49,11 +44,8 @@ source ~/.zshrc
 gmaps --version
 ```
 
-The first `gmaps -H` invocation will trigger the Location Services
-authorization dialog.
-
-> **Intel Macs**: prebuilt zips are arm64 only for now. Build from
-> source — see [Development setup](README.md#development-setup).
+`gmaps.app` is a CLI helper (LSUIElement), so no window appears when it
+launches. Then [set up your API key and settings](#first-time-setup).
 
 ### Verify download integrity
 
@@ -65,9 +57,10 @@ shasum -a 256 gmaps-0.1.3-macos-arm64.app.zip
 
 ## From source
 
-See [Development setup](README.md#development-setup) in the README
-for the Nix-based dev shell. Source builds are required for Intel
-Macs and for the latest unreleased changes.
+Build via the Nix-based dev shell — see
+[CONTRIBUTING.md → Development environment](CONTRIBUTING.md#development-environment)
+and [Building & running](CONTRIBUTING.md#building--running). Required for
+Intel Macs and for the latest unreleased changes.
 
 ## First-time setup
 
@@ -86,8 +79,9 @@ It walks you through:
 - **Default location source** — one of:
   - **Fixed place** — a saved coordinate (e.g. `home`) used when you don't
     pass `--location`.
-  - **GPS (CoreLocation)** — uses your Mac's location with `gmaps -H` /
-    `--here`.
+  - **GPS (CoreLocation)** — resolves your Mac's location via Location
+    Services (also available per-command with the `-H` / `--here` flag,
+    e.g. `gmaps nearby cafe -H`).
   - **Manual** — always require an explicit `--location`.
 - **Language / region** — e.g. `ja` / `JP`.
 
@@ -101,9 +95,9 @@ Settings live under `~/.config/gmaps/` (created with mode `0600`):
 | `config.yaml` | API key, default location source, language/region |
 | `places.yaml` | saved places |
 
-The first `gmaps -H` invocation triggers the macOS Location Services
-prompt; approve `gmaps` under **System Settings › Privacy & Security ›
-Location Services**.
+The first GPS invocation (e.g. `gmaps nearby cafe -H`) triggers the macOS
+Location Services prompt; approve `gmaps` under **System Settings ›
+Privacy & Security › Location Services**.
 
 ## Clean reinstall / uninstall
 

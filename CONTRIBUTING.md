@@ -27,9 +27,36 @@ cd gmaps-cli
 direnv allow            # or: nix develop
 ```
 
-This puts the pinned `cargo` 1.95, `clippy`, `rustfmt`, `cargo-bundle`,
-`cargo-nextest`, and the macOS SDK on PATH. If you don't use Nix, install
-Rust 1.95+ yourself and `cargo install cargo-bundle` for the `.app` flow.
+This puts the pinned `cargo` toolchain (latest stable via `flake.lock`,
+currently 1.96), `clippy`, `rustfmt`, `cargo-bundle`, `cargo-nextest`, and
+the macOS SDK on PATH. If you don't use Nix, install Rust 1.95+ (the MSRV)
+yourself and `cargo install cargo-bundle` for the `.app` flow.
+
+## Building & running
+
+```bash
+# Iterate during development (plain binary)
+cargo run -- nearby cafe --location 40.7580,-73.9855 --radius 500
+cargo build --release                  # → target/release/gmaps
+
+# Build the signed .app bundle (required for the GPS -H / --here path)
+./scripts/build.sh                     # cargo bundle + ad-hoc signing
+```
+
+> `cargo run` / `cargo build` produce a bare binary, so **GPS (`-H` /
+> `--here`) does not work** — CoreLocation authorization requires the `.app`
+> bundle that `./scripts/build.sh` produces. For a distributable build,
+> `./scripts/build-signed.sh` adds Developer ID signing, notarization, and
+> stapling (the flow `release.yml` runs); it needs a Developer ID cert plus
+> `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_SPECIFIC_PASSWORD`.
+
+To run the `.app`-bundled `gmaps` as a global command, symlink the binary
+inside the bundle onto your PATH:
+
+```bash
+mkdir -p ~/.local/bin
+ln -sf "$(pwd)/target/release/bundle/osx/gmaps.app/Contents/MacOS/gmaps" ~/.local/bin/gmaps
+```
 
 ## Running the checks
 
