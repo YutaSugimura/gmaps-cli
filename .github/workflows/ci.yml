@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+# Cancel superseded runs on PR branches; let main runs finish so the
+# cache built from main stays complete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   CARGO_TERM_COLOR: always
   # Don't fetch git index on every cargo invocation; the cache action below
@@ -15,6 +24,7 @@ jobs:
   check:
     name: fmt + clippy + test
     runs-on: macos-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -26,6 +36,11 @@ jobs:
 
       - name: Cache cargo registry and target
         uses: Swatinem/rust-cache@v2
+        with:
+          # One stable key for this workflow; PR runs restore main's cache
+          # but only main is allowed to write, so PRs can't pollute it.
+          shared-key: ci
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
