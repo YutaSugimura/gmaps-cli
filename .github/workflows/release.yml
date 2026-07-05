@@ -168,8 +168,8 @@ jobs:
                ```
             4. Verify with `gmaps --version`.
 
-            The first `gmaps -H` invocation will trigger the Location Services
-            authorization dialog.
+            The first GPS invocation (e.g. `gmaps nearby cafe -H`) will
+            trigger the Location Services authorization dialog.
 
             See [INSTALL.md](https://github.com/YutaSugimura/gmaps-cli/blob/main/INSTALL.md)
             for full instructions, SHA256 verification, and Intel Mac
