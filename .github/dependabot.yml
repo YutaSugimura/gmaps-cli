@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Rust dependencies: group semver-compatible bumps into one weekly PR so
+  # routine patch/minor churn doesn't fan out into many PRs. Major bumps
+  # (potentially breaking) still arrive as individual PRs.
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions used by ci.yml / release.yml / audit.yml.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday

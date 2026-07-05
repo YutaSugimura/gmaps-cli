@@ -31,6 +31,7 @@ jobs:
   build:
     name: Build signed .app bundle
     runs-on: macos-latest
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:
@@ -42,6 +43,11 @@ jobs:
 
       - name: Cache cargo registry and target
         uses: Swatinem/rust-cache@v2
+        with:
+          # Separate key from CI: release builds cache the --release target
+          # and the installed cargo-bundle binary (~/.cargo/bin is cached by
+          # default), so later releases skip recompiling cargo-bundle.
+          shared-key: release
 
       - name: Install cargo-bundle
         run: cargo install cargo-bundle --locked
