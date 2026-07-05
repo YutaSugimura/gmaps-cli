@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Audit Cargo.lock against the RustSec advisory DB
         uses: rustsec/audit-check@v2
