@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-07-05
+
+### Changed
+
+- Refreshed all dependencies to their latest versions (rustls 0.23.41,
+  anyhow 1.0.103, and other transitive updates) and bumped the pinned
+  dev-shell toolchain to Rust 1.96. MSRV stays at 1.95.
+- Docs: install/build documentation consolidated — development setup and
+  build instructions now live in CONTRIBUTING.md, with README/INSTALL
+  linking there instead of repeating them.
+- Docs: GPS examples no longer write `gmaps -H` as if `-H` were a global
+  flag; it is per-subcommand (e.g. `gmaps nearby cafe -H`).
+
 ## [0.1.3] - 2026-06-16
 
 ### Added
@@ -68,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive setup wizard, saved places (`places.yaml`), `.app` bundle
   packaging, and the prebuilt-release installation flow (INSTALL.md).
 
-[Unreleased]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/YutaSugimura/gmaps-cli/compare/v0.1.0...v0.1.1
